@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>emailutils.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>emailutils.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> mongoose            = <span class="hljs-built_in">require</span>(<span class="hljs-string">'mongoose'</span>)
+  , CampaignEmail       = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../models/CampaignEmail.js'</span>).CampaignEmail
+  , UserRequest         = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../models/UserRequest.js'</span>).UserRequest
+  , nodemailer          = <span class="hljs-built_in">require</span>(<span class="hljs-string">'nodemailer'</span>)
+  , Campaign            = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../models/Campaign.js'</span>).Campaign
+  , Promise             = <span class="hljs-built_in">require</span>(<span class="hljs-string">'promise'</span>)
+  , config              = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../config.js'</span>)
+  , User                = <span class="hljs-built_in">require</span>(<span class="hljs-string">'../models/User.js'</span>).User
+  , util                = <span class="hljs-built_in">require</span>(<span class="hljs-string">'util'</span>)
+  , db                  = mongoose.connection;
+
+<span class="hljs-keyword">var</span> connectionUrl = process.env.MONGOLAB_URI || <span class="hljs-string">'mongodb://localhost/v1'</span>;
+mongoose.connect(connectionUrl);
+db.on(<span class="hljs-string">'error'</span>, <span class="hljs-built_in">console</span>.error.bind(<span class="hljs-built_in">console</span>, <span class="hljs-string">'connection error:'</span>));
+db.once(<span class="hljs-string">'open'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{ <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'DB connection established.'</span>);});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Helper function for demo purposes to clear everything out and start fresh.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">wipeCollections</span><span class="hljs-params">(cb)</span> </span>{
+  CampaignEmail.remove({}).exec();
+  UserRequest.remove({}).exec();
+  Campaign.remove({}).exec();
+  User.remove({}).exec();
+  cb();
+}
+
+
+<span class="hljs-comment">/**
+ * Create a new, unique entry representing a 1 to 1 relationship between the
+ * individual `campaignId` and `userId` input variables.When the User table
+ * is built out and thought out a bit more, we'd probably have a list of emails
+ * that belong to the same person, with information from vendors to build a
+ * more in-depth 'picture' of each user and their behavior.'
+ *
+ * Callback parameter structure is as follows:
+ * index 0 - the error object
+ * index 1 - the result, if successful
+ * index 2 - no error thrown but no EmailCampaign was created - already in the DB
+ */</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">createNewCampaignEmailEntry</span><span class="hljs-params">(cid, uid, cb)</span> </span>{
+  <span class="hljs-keyword">var</span> campaignEmail;
+
+  CampaignEmail
+  .findOne({ campaignId: cid, userId: uid}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, _cEmail)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) {
+      <span class="hljs-keyword">return</span> cb(err);
+    }
+
+    <span class="hljs-keyword">if</span> (!_cEmail) {
+      campaignEmail = <span class="hljs-keyword">new</span> CampaignEmail({
+        campaignId: cid,
+        userId: uid
+      });
+
+      campaignEmail.save(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, _campaignEmail)</span> </span>{
+        <span class="hljs-keyword">if</span> (err) {
+          <span class="hljs-keyword">return</span> cb(err);
+        }
+
+        <span class="hljs-keyword">return</span> cb(<span class="hljs-literal">null</span>, _campaignEmail);
+      });
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Re-send the email for the existing CampaignEmail</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">else</span> {
+      <span class="hljs-built_in">console</span>.log(_cEmail);
+      <span class="hljs-keyword">return</span> cb(<span class="hljs-literal">null</span>, _cEmail, <span class="hljs-string">"We've already sent this person an email!"</span>);
+    }
+  });
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Create a new user or return the existing entry if it exists.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">createNewUser</span><span class="hljs-params">(email, name, cb)</span> </span>{
+  <span class="hljs-keyword">var</span> _email
+    , _name
+    , _user;
+
+  User.findOne({email: email, name: name}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, user)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) {
+      cb(err);
+    }
+    <span class="hljs-keyword">else</span> {
+      <span class="hljs-keyword">if</span> (!user) {
+        _user = <span class="hljs-keyword">new</span> User({ email: email, name: name });
+
+        _user.save(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, result)</span> </span>{
+          <span class="hljs-keyword">if</span> (err)
+            cb(err);
+          <span class="hljs-keyword">else</span>
+            cb(<span class="hljs-literal">null</span>, result);
+        });
+      } <span class="hljs-keyword">else</span> {
+        cb(<span class="hljs-literal">null</span>, user);
+      }
+    }
+  });
+}
+
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">createNewCampaign</span><span class="hljs-params">(name, cb)</span> </span>{
+  <span class="hljs-keyword">var</span> _campaign;
+
+  Campaign.findOne({name: name}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, campaign)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) {
+      cb(err);
+    }
+    <span class="hljs-keyword">else</span> {
+      <span class="hljs-keyword">if</span> (!campaign) {
+        _campaign = <span class="hljs-keyword">new</span> Campaign({ name: name });
+
+        _campaign.save(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, result)</span> </span>{
+          <span class="hljs-keyword">if</span> (err)
+            cb(err);
+          <span class="hljs-keyword">else</span>
+            cb(<span class="hljs-literal">null</span>, result);
+        });
+      } <span class="hljs-keyword">else</span> {
+        cb(<span class="hljs-literal">null</span>, campaign);
+      }
+    }
+  });
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">incrementOpenCount</span><span class="hljs-params">(campaignEmailId)</span> </span>{
+  CampaignEmail.update({_id: campaignEmailId}, { $inc: { opened: <span class="hljs-number">1</span> }}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, cEmail)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) <span class="hljs-built_in">console</span>.log(err);
+    <span class="hljs-built_in">console</span>.log(cEmail);
+  });
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Mark this entry as ‘Opened’. Done after we get a
+request on our /img endpoint</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">setOpenTime</span><span class="hljs-params">(campaignEmailId)</span> </span>{
+  CampaignEmail.findOne({_id: campaignEmailId}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, cEmail)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) <span class="hljs-built_in">console</span>.log(err);
+    <span class="hljs-keyword">else</span> {
+      cEmail.openTime = <span class="hljs-built_in">Date</span>.now();
+      cEmail.save();
+    }
+  });
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>Mark this entry as ‘Submitted’. Done after we get a
+request on our /submit endpoint</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">setSubmitTime</span><span class="hljs-params">(campaignEmailId, cb)</span> </span>{
+  CampaignEmail.findOne({_id: campaignEmailId}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, cEmail)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) <span class="hljs-built_in">console</span>.log(err);
+    <span class="hljs-keyword">else</span> {
+      cEmail.submitTime = <span class="hljs-built_in">Date</span>.now();
+      cb(cEmail);
+    }
+  });
+}
+
+
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">addRequestToCampaignEmailId</span><span class="hljs-params">(campaignId, userReq)</span> </span>{
+  CampaignEmail
+    .findOne({campaignId: campaignId}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, res)</span> </span>{
+      <span class="hljs-keyword">if</span> (err) {
+        <span class="hljs-built_in">console</span>.log(err, <span class="hljs-string">" // Error adding this request to the campaign email"</span>);
+      } <span class="hljs-keyword">else</span> {
+        res.openTime = <span class="hljs-built_in">Date</span>.now();
+        res.requests.push(userReq);
+        res.save();
+      }
+    });
+}
+
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">addRequestToCampaignEmail</span><span class="hljs-params">(campaignId, userReq)</span> </span>{
+  CampaignEmail
+    .find({ campaignId: campaignId })
+    .where(<span class="hljs-string">'userId'</span>).equals(userReq.userId)
+    .exec(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, res)</span> </span>{
+      <span class="hljs-keyword">if</span> (err) {
+        <span class="hljs-built_in">console</span>.log(err, <span class="hljs-string">" // Error adding this request to the campaign email"</span>);
+      } <span class="hljs-keyword">else</span> {
+        res.requests.push(userReq);
+      }
+    });
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">listAllCampaignEmails</span><span class="hljs-params">(cb)</span> </span>{
+  CampaignEmail.find({}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, results)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) <span class="hljs-built_in">console</span>.log(err);
+    <span class="hljs-keyword">else</span> cb(results);
+  });
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">listAllCampaigns</span><span class="hljs-params">(cb)</span> </span>{
+  Campaign.find({}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, results)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) <span class="hljs-built_in">console</span>.log(err);
+    <span class="hljs-keyword">else</span> cb(results);
+  });
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">listAllUserRequests</span><span class="hljs-params">(cb)</span> </span>{
+  UserRequest.find({}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, results)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) <span class="hljs-built_in">console</span>.log(err);
+    <span class="hljs-keyword">else</span> cb(results);
+  });
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">listAllUsers</span><span class="hljs-params">(cb)</span> </span>{
+  User.find({}, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, results)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) <span class="hljs-built_in">console</span>.log(err);
+    <span class="hljs-keyword">else</span> cb(results);
+  });
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getCampaignAndUserFromId</span><span class="hljs-params">(campaignEntryId, cb)</span> </span>{
+  CampaignEmail.findById(campaignEntryId, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, campEmail)</span> </span>{
+    <span class="hljs-keyword">if</span> (err)
+      cb(err);
+    <span class="hljs-keyword">else</span>
+      cb(<span class="hljs-literal">null</span>, campEmail);
+  });
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>Not used yet, but this would enable using the actual names and stuff instead
+of the mongo ID’s</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getCampaignAndUserFromId2</span><span class="hljs-params">(campaignEntryId, cb)</span> </span>{
+  <span class="hljs-keyword">var</span> userEmail
+    , campaignId
+    , userId;
+
+  CampaignEmail.findById(campaignEntryId, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, campEmail)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) cb(err);
+    <span class="hljs-keyword">else</span> {
+      userId = campEmail.userId;
+      campaignId = campEmail.campaignId;
+
+      campEmail
+      .populate(<span class="hljs-string">'userId'</span>)
+      .exec(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, result)</span> </span>{
+        <span class="hljs-keyword">if</span> (err) cb(err);
+        <span class="hljs-keyword">else</span> {
+          userEmail = result.email;
+          campEmail
+          .populate(<span class="hljs-string">'campaignId'</span>)
+          .exec(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, result)</span> </span>{
+            <span class="hljs-keyword">if</span> (err) cb(err);
+            <span class="hljs-keyword">else</span> {
+              cb(<span class="hljs-literal">null</span>, userEmail, result.name, campaignId, userId);
+            }
+          })
+        }
+      })
+    }
+  });
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">logIncomingRequest</span><span class="hljs-params">(userId, campaignId, req, type)</span> </span>{
+  <span class="hljs-keyword">var</span> reqHeaders  = req.headers
+    , userReq;
+
+    userReq = <span class="hljs-keyword">new</span> UserRequest({
+      userId: userId,
+      campaignId: campaignId,
+      userAgent: reqHeaders[<span class="hljs-string">'user-agent'</span>],
+      referer: reqHeaders.referer,
+      cookie: <span class="hljs-built_in">unescape</span>(reqHeaders.cookie),
+      xForwardedProto: reqHeaders[<span class="hljs-string">'x-forwarded-proto'</span>],
+      xRegion: reqHeaders[<span class="hljs-string">'x-region'</span>],
+      query: req.query,
+      reqType: type || <span class="hljs-string">'open'</span>,
+      xForwardedFor: reqHeaders[<span class="hljs-string">'x-forwarded-for'</span>]
+    });
+
+    userReq.save(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, _userReq)</span> </span>{
+      <span class="hljs-keyword">if</span> (err) {
+        <span class="hljs-built_in">console</span>.log(err, <span class="hljs-string">" // Something went wrong trying to save this UserRequest"</span>);
+      } <span class="hljs-keyword">else</span> {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>Add this request to the list of requests that were
+recieved for this campaign email</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        addRequestToCampaignEmailId(campaignId, userReq);
+      }
+    });
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getUserIdFromEmail</span><span class="hljs-params">(email)</span> </span>{
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Promise(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(reject, resolve)</span> </span>{
+    User.findOne({ email: email }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, result)</span> </span>{
+      <span class="hljs-keyword">if</span> (err) reject(err);
+      <span class="hljs-keyword">else</span> {
+        <span class="hljs-built_in">console</span>.log(result);
+        resolve(result._id);
+      }
+    });
+  });
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getUserId</span><span class="hljs-params">(email, cb)</span> </span>{
+    User.findOne({ email: email }, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, result)</span> </span>{
+      <span class="hljs-keyword">if</span> (err) <span class="hljs-built_in">console</span>.log(err);
+      <span class="hljs-keyword">else</span> {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>console.log(result);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">return</span> cb(result._id);
+      }
+  });
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getUserEmailFromId</span><span class="hljs-params">(userId, cb)</span> </span>{
+  User.findById(userId, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, result)</span> </span>{
+      <span class="hljs-keyword">if</span> (err) <span class="hljs-built_in">console</span>.log(err);
+      <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">return</span> cb(result.email);
+      }
+  });
+}
+
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">sendMail</span><span class="hljs-params">(campaignEmailId, email, cb)</span> </span>{
+  <span class="hljs-keyword">var</span> transporter
+    , mailOptions
+    , body;
+  body = <span class="hljs-string">"&lt;form action=\"http://emailtracker.herokuapp.com/result\" method=\"GET\"&gt;"</span> +
+         <span class="hljs-string">"&lt;img src=\"http://emailtracker.herokuapp.com/img?id="</span>+campaignEmailId+<span class="hljs-string">"\"&gt;&lt;/img&gt;"</span> +
+         <span class="hljs-string">"&lt;fieldset&gt;"</span> +
+         <span class="hljs-string">"&lt;textarea id=\"textarea\" name=\""</span>+campaignEmailId+<span class="hljs-string">"\"&gt;testing..testing 1.. 2..&lt;/textarea&gt;"</span> +
+         <span class="hljs-string">"&lt;button type=\"submit\"&gt;Click to try and send...&lt;/button&gt;"</span>+
+         <span class="hljs-string">"&lt;/fieldset&gt;"</span> +
+         <span class="hljs-string">"&lt;/form&gt;"</span>;
+
+  mailOptions = {
+    from: config.mailFrom,
+    to: email,
+    subject: <span class="hljs-string">"Email Tracker Demo"</span>,
+    html: body
+  };
+
+  transporter = nodemailer.createTransport({
+    service: config.service,
+    auth: config.auth
+  })
+  .sendMail(mailOptions, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, info)</span> </span>{
+    <span class="hljs-keyword">if</span> (err) {
+      cb(err);
+    }
+    cb(<span class="hljs-literal">null</span>, info);
+  });
+}
+
+
+<span class="hljs-built_in">module</span>.exports = {
+  sendMail: sendMail,
+  getUserIdFromEmail: getUserIdFromEmail,
+  getUserEmailFromId: getUserEmailFromId,
+  getUserId: getUserId,
+  wipeCollections: wipeCollections,
+  incrementOpenCount: incrementOpenCount,
+  listAllCampaignEmails: listAllCampaignEmails,
+  listAllCampaigns: listAllCampaigns,
+  listAllUsers: listAllUsers,
+  listAllUserRequests: listAllUserRequests,
+  setOpenTime: setOpenTime,
+  createNewCampaign: createNewCampaign,
+  createNewUser: createNewUser,
+  setSubmitTime: setSubmitTime,
+  logIncomingRequest: logIncomingRequest,
+  createNewCampaignEmailEntry: createNewCampaignEmailEntry,
+  getCampaignAndUserFromId: getCampaignAndUserFromId
+};</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

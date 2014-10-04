@@ -1,0 +1,10 @@
+module.exports = {
+  mailFrom: 'yourfromemailaddy@gmail.com',
+  mailTo: 'yourtoemailaddy@gmail.com',
+  mailSubject: 'DEMO!',
+  service: 'gmail',
+  auth: {
+    user: 'yourgmailaccount@gmail.com',
+    pass: 'yourgmailpassword'
+  }
+};

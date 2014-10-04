@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>routes.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>routes.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> querystring = <span class="hljs-built_in">require</span>(<span class="hljs-string">'querystring'</span>)
+  , utilities   = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./lib/emailutils.js'</span>)
+  , util        = <span class="hljs-built_in">require</span>(<span class="hljs-string">'util'</span>);
+
+
+<span class="hljs-built_in">module</span>.exports = {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Helper route to remove everything from the MongoDB so we can start from
+scratch.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  clearCollections: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(req, res)</span> </span>{
+    utilities.wipeCollections(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+      res.end(<span class="hljs-string">"Collections cleared out"</span>);
+    });
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>This route lists all the entries in our mongo collections in JSON form.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  list: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(req, res)</span> </span>{
+    <span class="hljs-keyword">var</span> collection = req.query.type;
+    <span class="hljs-keyword">switch</span> (collection) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Show all the campaign entries in the DB
+<code>/list?type=campaigns</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">case</span> <span class="hljs-string">'campaigns'</span>:
+        utilities.listAllCampaigns(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(results)</span> </span>{
+          res.writeHead(<span class="hljs-number">200</span>, {<span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/json'</span> });
+          res.write(<span class="hljs-built_in">JSON</span>.stringify(results));
+          res.end();
+        });
+        <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Show all the users in the DB
+<code>/list?type=users</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">case</span> <span class="hljs-string">'users'</span>:
+        utilities.listAllUsers(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(results)</span> </span>{
+          res.writeHead(<span class="hljs-number">200</span>, {<span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/json'</span> });
+          res.write(<span class="hljs-built_in">JSON</span>.stringify(results));
+          res.end();
+        });
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">case</span> <span class="hljs-string">'userrequests'</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>Show all the request objects made
+<code>/list?type=userrequests</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        utilities.listAllUserRequests(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(results)</span> </span>{
+          res.writeHead(<span class="hljs-number">200</span>, {<span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/json'</span> });
+          res.write(<span class="hljs-built_in">JSON</span>.stringify(results));
+          res.end();
+        });
+        <span class="hljs-keyword">break</span>;
+
+      <span class="hljs-keyword">default</span>:
+      <span class="hljs-keyword">case</span> <span class="hljs-string">'campaignemails'</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>Show all the CampaignEmail instances, and their requests. This is the
+most informative route at the moment (AKA, default) as it shows the
+way this POC logs things and shows opens/submits in the requests.
+<code>/list?type=campaignemails</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        utilities.listAllCampaignEmails(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(results)</span> </span>{
+          res.writeHead(<span class="hljs-number">200</span>, {<span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/json'</span> });
+          res.write(<span class="hljs-built_in">JSON</span>.stringify(results));
+          res.end();
+        });
+        <span class="hljs-keyword">break</span>;
+    }
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>Create a campaign using a campaign name. Simple schema example for this.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  createCampaign: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(req, res)</span> </span>{
+    <span class="hljs-keyword">var</span> name = req.query.name;
+    utilities.createNewCampaign(name, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, result)</span> </span>{
+      <span class="hljs-keyword">if</span> (err) <span class="hljs-built_in">console</span>.log(err, <span class="hljs-string">"// Can't create new campaign"</span>);
+      <span class="hljs-keyword">else</span> {
+          res.writeHead(<span class="hljs-number">200</span>, {<span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/json'</span> });
+          res.write(<span class="hljs-built_in">JSON</span>.stringify(result));
+          res.end();
+      }
+    });
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Create a user using an email and name. Again, super simple schema - no real
+error checking, and the potential for this user collection is huge as far as
+bettering the user experience by making smarter decisions based on previously
+logged settings/data</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  createUser: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(req, res)</span> </span>{
+    <span class="hljs-keyword">var</span> name  = req.query.name || <span class="hljs-string">'user'</span>
+      , email = req.query.email;
+
+    utilities.createNewUser(email, name, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, result)</span> </span>{
+      <span class="hljs-keyword">if</span> (err) <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Can't create a new user!\n"</span>, err);
+      <span class="hljs-keyword">else</span> {
+          res.writeHead(<span class="hljs-number">200</span>, {<span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/json'</span> });
+          res.write(<span class="hljs-built_in">JSON</span>.stringify(result));
+          res.end();
+      }
+    });
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>This endpoint creates a unique <code>CampaignEmail</code> instance, tied to the
+campaigns unique ID and the user’s unique ID. This method crafts and sends
+the email.
+NOTE: The email template is</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  createCampaignEmail: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(req, res)</span> </span>{
+    <span class="hljs-keyword">var</span> campaignId = req.query.cid
+      , userId     = req.query.uid;
+
+    utilities.getUserEmailFromId(userId, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(userEmail)</span> </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>userId = userId.toString();</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      utilities.createNewCampaignEmailEntry(
+        campaignId,
+        userId,
+        <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, result, message)</span> </span>{
+          <span class="hljs-keyword">if</span> (err) {
+            res.end(err.toString());
+          }
+          <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (!message &amp;&amp; result) {
+            utilities.sendMail(result._id.toString(), userEmail, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, info)</span> </span>{
+              <span class="hljs-keyword">if</span> (err) <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'ERROR '</span>, err.toString());
+              res.writeHead(<span class="hljs-number">200</span>, {<span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'text/json'</span> });
+              res.write(<span class="hljs-built_in">JSON</span>.stringify(info));
+              res.end();
+            });
+          }
+          <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (message &amp;&amp; result) {
+            utilities.sendMail(result._id.toString(), userEmail, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, info)</span> </span>{
+              res.end(util.format(<span class="hljs-string">"Sent another email to %s"</span>, userEmail));
+            });
+          }
+        }
+      );
+    });
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>This endpoint is called anytime a user opens the email on a new client that
+supports auto-loading images. In GMail, this will be triggered every time a
+new client opens the email - I.E., it will be triggered when I open it on my
+desktop client the first time I open the email, never again for any other open
+because it’s cached locally. If I open this same email with a different email
+client, it will then make another request to trigger another ‘open’. The issue
+with GMail is simply that their internal image caching technique makes the
+originating requests for image loads on a GMail client come from the GMail
+image caching server. So we basically lose all information other than the fact
+that it was opened again on another device/client, and that it’s coming from
+GMail. You can see this via the user-agent string logged:
+<code>(via ggpht.com GoogleImageProxy)</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  imageLoad: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(req, res)</span> </span>{
+    <span class="hljs-keyword">var</span> campaignId
+      , errorMsg
+      , userId;
+
+    utilities.getCampaignAndUserFromId(req.query.id, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, campEmail)</span> </span>{
+      <span class="hljs-keyword">if</span> (err) {
+        errorMsg = <span class="hljs-string">'Had a tough time grabbing the corresponding user or campaign '</span> +
+                   <span class="hljs-string">'based on this CampaignEmail ID (%s). Please double check the ID!'</span>;
+        <span class="hljs-keyword">return</span>(<span class="hljs-built_in">console</span>.log(util.format(errorMsg, req.query.id)));
+      }
+      userId = campEmail.userId.toString();
+      campaignId = campEmail.campaignId.toString();
+
+      utilities.logIncomingRequest(userId, campaignId, req);
+      utilities.setOpenTime(req.query.id);
+      utilities.incrementOpenCount(req.query.id);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Send down a super small, transparent image to satisfy the request.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">var</span> buf = <span class="hljs-keyword">new</span> Buffer([
+      <span class="hljs-number">0x47</span>, <span class="hljs-number">0x49</span>, <span class="hljs-number">0x46</span>, <span class="hljs-number">0x38</span>, <span class="hljs-number">0x39</span>, <span class="hljs-number">0x61</span>, <span class="hljs-number">0x01</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x01</span>, <span class="hljs-number">0x00</span>,
+      <span class="hljs-number">0x80</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0xff</span>, <span class="hljs-number">0xff</span>, <span class="hljs-number">0xff</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x2c</span>,
+      <span class="hljs-number">0x00</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x01</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x01</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x02</span>,
+      <span class="hljs-number">0x02</span>, <span class="hljs-number">0x44</span>, <span class="hljs-number">0x01</span>, <span class="hljs-number">0x00</span>, <span class="hljs-number">0x3b</span>]);
+
+      res.send(buf, { <span class="hljs-string">'Content-Type'</span>: <span class="hljs-string">'image/gif'</span> }, <span class="hljs-number">200</span>);
+      res.end();
+    });
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>Here’s the main endpoint of this whole POC. There’s a little bit of logic
+here to kind of show that things are being tracked, but it could do a lot more
+with not too much more work - I just spent maybe too much time on getting a
+decent back-end to facilitate this, because…. I don’t know, I like to build
+things out and find it tough to do a shitty POC.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  result: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(req, res)</span> </span>{
+    <span class="hljs-keyword">var</span> campaignId = <span class="hljs-built_in">Object</span>.keys(req.query)[<span class="hljs-number">0</span>]
+      , responseMessage
+      , uid
+      , cid;
+
+
+    utilities.getCampaignAndUserFromId(campaignId, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(campEmail)</span> </span>{
+      uid = campEmail.userId;
+      cid = campEmail.campaignId;
+      utilities.logIncomingRequest(uid, cid, req, <span class="hljs-string">"submit"</span>);
+      utilities.setSubmitTime(campaignId, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(_campEmail)</span> </span>{
+        <span class="hljs-keyword">if</span> (_campEmail.consumed) {
+          responseMessage = <span class="hljs-string">'Sorry! This offer has been claimed already.\n'</span>;
+        } <span class="hljs-keyword">else</span> {
+          _campEmail.consumed = <span class="hljs-literal">true</span>;
+          responseMessage = <span class="hljs-string">'Congratulations on claiming this offer!\n'</span>;
+        }
+
+        responseMessage += <span class="hljs-string">'(userId: %s, campaignId: %s)\n'</span> +
+                           <span class="hljs-string">'This email has been opened at least %s times'</span>;
+        responseMessage = util.format(responseMessage, uid, cid, _campEmail.opened);
+
+        _campEmail.save(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, result)</span> </span>{
+          res.end(responseMessage);
+        });
+      });
+    });
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>Catch-all route to stop heroku from crashing</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  nonRoute: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(req, res)</span> </span>{
+    <span class="hljs-built_in">console</span>.log(util.inspect(req));
+    res.end(<span class="hljs-string">"Whoooooa there pilgrim, this ain't a route!"</span>);
+  }
+
+};</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>
